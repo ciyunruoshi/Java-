@@ -1,0 +1,21 @@
+package Java_Design_Modul.s1;
+
+public final class Point {
+    private int x;
+    private int y;
+    public Point(int xx,int yy){
+        x =xx;
+        y = yy;
+    }
+    public synchronized void move(int dx,int dy){
+        x+=dx;
+        y+=dy;
+    }
+
+    public static void main(String[] args){
+        Point p = new Point(1,2);
+        p.move(1,1);
+        p.x = 10;
+        System.out.println(p.x+","+p.y);
+    }
+}
