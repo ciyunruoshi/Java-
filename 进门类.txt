@@ -1,0 +1,42 @@
+package Java_Design_Modul.s1;
+
+class UseThread extends Thread{
+    SecurityGate gate;
+    int dex;
+    public UseThread(SecurityGate gate,int index){
+        this.gate=gate;
+        dex=index;
+    }
+    @Override
+    public void run() {
+        System.out.println("No."+dex+" Enter");
+        gate.enter();
+        try {
+            Thread.sleep(1000);
+        }catch(Exception ex){}
+        gate.exit();
+        System.out.println("No."+dex+" Exit "+"门内人数："+gate.getCount());
+
+    }
+}
+
+public class SecurityGate {
+    private int count=0;
+    public void enter(){
+        count++;
+    }
+    public void exit(){
+        count--;
+    }
+    public int getCount(){
+        return count;
+    }
+    public static void main(String[] args){
+        SecurityGate gate = new SecurityGate();
+        for(int i=0;i<10;i++){
+            new UseThread(gate,i).start();
+        }
+
+    }
+}
+////this not true!!!!!!
