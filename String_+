@@ -1,1 +1,15 @@
 
+其实String对+的支持其实就是使用了StringBuilder以及他的append、toString两个方法。
+```
+public static void main(String[] args) {
+    String s1 = "yves";
+    String s2 = s1 + "he";
+}
+```
+反编译结果：
+```
+public static void main(String[] args) {
+    String s1 = "yves";
+    String s2 = (new StringBuilder(String.valueOf(s1))).append("he").toString();
+}
+```
