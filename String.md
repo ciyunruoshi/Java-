@@ -20,56 +20,31 @@ String不能修改。
 
 
 subString问题
-```
-public String(char value[], int offset, int count) {
-        if (offset < 0) {
-            throw new StringIndexOutOfBoundsException(offset);
-        }
-        if (count <= 0) {
-            if (count < 0) {
-                throw new StringIndexOutOfBoundsException(count);
-            }
-            if (offset <= value.length) {
-                this.value = "".value;
-                //this.value = new String("").value;等价
-                return;
-            }
-        }
-        // Note: offset or count might be near -1>>>1.
-        if (offset > value.length - count) {
-            throw new StringIndexOutOfBoundsException(offset + count);
-        }
-        this.value = Arrays.copyOfRange(value, offset, offset+count);
-        //最终调用Arrays的拷贝工程方法实现深复制
-    }
-    
-    //subString 实现方式，调用String的构造方法。
-    public String substring(int beginIndex, int endIndex) {
-        if (beginIndex < 0) {
-            throw new StringIndexOutOfBoundsException(beginIndex);
-        }
-        if (endIndex > value.length) {
-            throw new StringIndexOutOfBoundsException(endIndex);
-        }
-        int subLen = endIndex - beginIndex;
-        if (subLen < 0) {
-            throw new StringIndexOutOfBoundsException(subLen);
-        }
-        return ((beginIndex == 0) && (endIndex == value.length)) ? this
-                : new String(value, beginIndex, subLen);
-    }
-    
-    //利用类的类型，反射实现final数组的创建，并且拷贝
-    public static <T,U> T[] copyOfRange(U[] original, int from, int to, Class<? extends T[]> newType) {
-        int newLength = to - from;
-        if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
-        @SuppressWarnings("unchecked")
-        T[] copy = ((Object)newType == (Object)Object[].class)
-            ? (T[]) new Object[newLength]
-            : (T[]) Array.newInstance(newType.getComponentType(), newLength);
-        System.arraycopy(original, from, copy, 0,
-                         Math.min(original.length - from, newLength));
-        return copy;
-    }
-```
+JDK 6中的substring
+String是通过字符数组实现的。在jdk 6 中，String类包含三个成员变量：char value[]， int offset，int count。他们分别用来存储真正的字符数组，数组的第一个位置索引以及字符串中包含的字符个数。
+
+当调用substring方法的时候，会创建一个新的string对象，但是这个string的值仍然指向堆中的同一个字符数组。这两个对象中只有count和offset 的值是不同的。
+
+
+下面是证明上说观点的Java源码中的关键代码：
+
+//JDK 6
+String(int offset, int count, char value[]) {
+    this.value = value;
+    this.offset = offset;
+    this.count = count;
+}
+
+public String substring(int beginIndex, int endIndex) {
+    //check boundary
+    return  new String(offset + beginIndex, endIndex - beginIndex, value);
+}
+
+JDK 6中的substring导致的问题
+如果你有一个很长很长的字符串，但是当你使用substring进行切割的时候你只需要很短的一段。这可能导致性能问题，因为你需要的只是一小段字符序列，但是你却引用了整个字符串（因为这个非常长的字符数组一直在被引用，所以无法被回收，就可能导致内存泄露）。在JDK 6中，一般用以下方式来解决该问题，原理其实就是生成一个新的字符串并引用他。
+
+JDK 7 中的substring
+上面提到的问题，在jdk 7中得到解决。在jdk 7 中，substring方法会在堆内存中创建一个新的数组，数组中只包含规定子串。
+
+    JDK7中只包含hash 和char[] 两个值，没有偏移量。
+
