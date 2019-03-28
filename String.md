@@ -17,3 +17,59 @@ String不能修改。
 1 String会大量使用，因此利用字符串常量池的功能来实现字符串的享元模式，减少创建，复用字符串，提高效率，如果能够更改字符串的值，会导致其他引用也被迫改变
 造成安全问题。
 节省内存，提高效率，避免安全性问题。
+
+
+subString问题
+```
+public String(char value[], int offset, int count) {
+        if (offset < 0) {
+            throw new StringIndexOutOfBoundsException(offset);
+        }
+        if (count <= 0) {
+            if (count < 0) {
+                throw new StringIndexOutOfBoundsException(count);
+            }
+            if (offset <= value.length) {
+                this.value = "".value;
+                //this.value = new String("").value;等价
+                return;
+            }
+        }
+        // Note: offset or count might be near -1>>>1.
+        if (offset > value.length - count) {
+            throw new StringIndexOutOfBoundsException(offset + count);
+        }
+        this.value = Arrays.copyOfRange(value, offset, offset+count);
+        //最终调用Arrays的拷贝工程方法实现深复制
+    }
+    
+    //subString 实现方式，调用String的构造方法。
+    public String substring(int beginIndex, int endIndex) {
+        if (beginIndex < 0) {
+            throw new StringIndexOutOfBoundsException(beginIndex);
+        }
+        if (endIndex > value.length) {
+            throw new StringIndexOutOfBoundsException(endIndex);
+        }
+        int subLen = endIndex - beginIndex;
+        if (subLen < 0) {
+            throw new StringIndexOutOfBoundsException(subLen);
+        }
+        return ((beginIndex == 0) && (endIndex == value.length)) ? this
+                : new String(value, beginIndex, subLen);
+    }
+    
+    //利用类的类型，反射实现final数组的创建，并且拷贝
+    public static <T,U> T[] copyOfRange(U[] original, int from, int to, Class<? extends T[]> newType) {
+        int newLength = to - from;
+        if (newLength < 0)
+            throw new IllegalArgumentException(from + " > " + to);
+        @SuppressWarnings("unchecked")
+        T[] copy = ((Object)newType == (Object)Object[].class)
+            ? (T[]) new Object[newLength]
+            : (T[]) Array.newInstance(newType.getComponentType(), newLength);
+        System.arraycopy(original, from, copy, 0,
+                         Math.min(original.length - from, newLength));
+        return copy;
+    }
+```
